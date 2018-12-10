@@ -1,0 +1,103 @@
+service: sample-endpoints
+
+frameworkVersion: ">=1.1.0 <2.0.0"
+
+custom:
+  bucket: sample-endpoints
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  stage: dev
+  region: ap-southeast-2
+  environment:
+    DYNAMODB_TABLE: ${self:service}-${opt:stage, self:provider.stage}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:PutObject
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:s3:::${self:custom.bucket}/*:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
+
+functions:
+  currentTime:
+    handler: src/handler.endpoint
+    events:
+    - http:
+        path: ping
+        method: get
+  landingPage:
+    handler: src/handler.landingPage
+    events:
+    - http:
+        method: get
+        path: landing-page
+  hello:
+    handler: src/hello.handler
+    events:
+    - http:
+        path: hello
+        method: get
+  save:
+    handler: src/s3.save
+    environment:
+      BUCKET: ${self:custom.bucket}
+  create:
+    handler: src/todos/create.create
+    events:
+    - http:
+        path: todos
+        method: post
+        cors: true
+  list:
+    handler: src/todos/list.list
+    events:
+    - http:
+        path: todos
+        method: get
+        cors: true
+  get:
+    handler: src/todos/get.get
+    events:
+    - http:
+        path: todos/{id}
+        method: get
+        cors: true
+  update:
+    handler: src/todos/update.update
+    events:
+    - http:
+        path: todos/{id}
+        method: put
+        cors: true
+  delete:
+    handler: todos/delete.delete
+    events:
+    - http:
+        path: todos/{id}
+        method: delete
+        cors: true
+
+resources:
+  Resources:
+    TodosDynamoDbTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+        -
+          AttributeName: id
+          AttributeType: S
+        KeySchema:
+        -
+          AttributeName: id
+          KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}

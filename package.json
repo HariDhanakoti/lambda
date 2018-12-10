@@ -1,0 +1,12 @@
+{
+  "name": "aws-serve-simple-http-endpoint",
+  "version": "1.0.0",
+  "description": "Example demonstrates how to setup a simple HTTP GET endpoint",
+  "author": "",
+  "license": "HD",
+  "dependencies": {
+    "aws-sdk": "^2.7.9",
+    "node-fetch": "^1.6.3",
+    "uuid": "^2.0.3"
+  }
+}
